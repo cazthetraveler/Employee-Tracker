@@ -61,6 +61,26 @@ function init() {
                     };
                 });
                 break;
+            case "Add a Department":
+                inquirer.prompt([
+                    {
+                        type: "input",
+                        message: "Please enter department name.",
+                        name: "deptname"
+                    }
+                ]).then((data) => {
+                    const deptname = JSON.stringify(data.deptname);  //stringify because it doesnt insert
+                    db.query(`INSERT INTO department (name)
+                    VALUES(${deptname});`, function(err, results) {
+                        if (err) {
+                            console.error(err);
+                        } else {
+                            console.log(`New department added successfully!!`);
+                        };
+                    init();
+                    });
+                });
+                break;
             case "QUIT":
                 console.log(`Hasta la pizza!`);
                 db.end();
