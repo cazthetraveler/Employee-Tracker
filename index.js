@@ -81,6 +81,38 @@ function init() {
                     });
                 });
                 break;
+            case "Add a Role":
+                db.query(`SELECT name FROM department`, function(err, results) {
+                    const deptNames = results.map(result => result.name);
+                    inquirer.prompt([
+                        {
+                            type: "input",
+                            message: "Please enter a role name.",
+                            name: "rolename"
+                        },
+                        {
+                            type: "input",
+                            message: "Please enter a salary.",
+                            name: "rolesalary"
+                        },
+                        {
+                            type: "list",
+                            message: "Please select an existing department.",
+                            choices: deptNames,
+                            name: "roledept"
+                        }
+                    ]).then((data) => {
+                        const title = JSON.stringify(data.rolename);
+                        const salary = JSON.stringify(data.rolesalary);
+                        const deptId = JSON.stringify(data.roledept);
+                        const deptIdInsert = `(SELECT id FROM department WHERE name = ${deptId})`;
+                        db.query(`INSERT INTO role (title, salary, department_id)
+                        VALUES(${title}, ${salary}, ${deptIdInsert});`);
+                        console.log(`New role added successfully!!`);
+                        init();
+                    });
+                });
+                break;
             case "QUIT":
                 console.log(`Hasta la pizza!`);
                 db.end();
