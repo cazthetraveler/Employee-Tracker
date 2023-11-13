@@ -285,6 +285,37 @@ function init() {
                     };
                 });
                 break;
+            case "View Employees by Manager":
+                db.query(`SELECT CONCAT(e.first_name, ' ', e.last_name) AS manager FROM employee AS e
+                WHERE e.manager_id IS NULL;`, function(err, results) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        const managers = results.map(result => result.manager);
+                        inquirer.prompt([
+                            {
+                                type: "list",
+                                message: "Select a manager to view their employees.",
+                                choices: managers,
+                                name: "manager"
+                            }
+                        ]).then((data) => {
+                            const managerView = data.manager;
+                            db.query(`SELECT CONCAT(e.first_name, ' ', e.last_name) AS employees FROM employee AS e
+                            JOIN employee AS m ON e.manager_id = m.id
+                            WHERE CONCAT(m.first_name, ' ', m.last_name) = "${managerView}"`, function(err, results) {
+                                if (err) {
+                                    console.error(err);
+                                } else {
+                                    console.table(results);
+                                    console.log(`Viewing ${managerView}'s employees!`)
+                                    init();
+                                };
+                            });
+                        });
+                    };
+                });
+                break;
             case "QUIT":
                 console.log(`Hasta la pizza!`);
                 db.end();
