@@ -16,7 +16,7 @@ function init() {
         {
             type: "list",
             message: "What would you like to do?",
-            choices: ["View All Departments", "View All Roles", "View All Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Update an Employee's Manager", "QUIT"],
+            choices: ["View All Departments", "View All Roles", "View All Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Update an Employee's Manager", "View Employees by Department", "QUIT"],
             name: "action"
         }
     ]).then((data) => {
@@ -248,6 +248,37 @@ function init() {
                                             };
                                         });
                                     });
+                                };
+                            });
+                        });
+                    };
+                });
+                break;
+            case "View Employees by Department":
+                db.query(`SELECT name FROM department`, function (err, results) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        const departments = results.map(result => result.name);
+                        inquirer.prompt([
+                            {
+                                type: "list",
+                                message: "Choose a department to view.",
+                                choices: departments,
+                                name: "department"
+                            }
+                        ]).then((data) => {
+                            const departmentName = data.department;
+                            db.query(`SELECT employee.id AS employee_id, CONCAT(employee.first_name, ' ', employee.last_name) AS name, role.title AS role FROM employee
+                            JOIN role ON employee.role_id = role.id
+                            JOIN department ON role.department_id = department.id
+                            WHERE department.name = "${departmentName}"`, function(err, results) {
+                                if (err) {
+                                    console.error(err);
+                                } else {
+                                    console.table(results);
+                                    console.log(`Viewing all employees from ${departmentName}!!`);
+                                    init();
                                 };
                             });
                         });
