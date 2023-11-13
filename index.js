@@ -113,6 +113,55 @@ function init() {
                     });
                 });
                 break;
+            case "Add an Employee":
+                db.query(`SELECT title FROM role`, function(err, results) {
+                    const titles = results.map(result => result.title);
+                    inquirer.prompt([
+                        {
+                            type: "input",
+                            message: "Please enter their first name.",
+                            name: "firstname"
+                        },
+                        {
+                            type: "input",
+                            message: "Please enter their last name.",
+                            name: "lastname"
+                        },
+                        {
+                            type: "list",
+                            message: "Please select an existing role.",
+                            choices: titles,
+                            name: "emprole"
+                        }
+                    ]).then((data) => {
+                        const firstName = data.firstname;
+                        const lastName = data.lastname;
+                        const role = data.emprole;
+                        db.query(`SELECT CONCAT(e.first_name, ' ', e.last_name) AS manager FROM employee AS e
+                        WHERE e.manager_id IS NULL;`, function(err, results) {
+                            if (err) {
+                                console.error(err);
+                            };
+                            const managers = results.map(result => result.manager);
+                            managers.unshift("NONE");
+                            inquirer.prompt([
+                                {
+                                    type: "list",
+                                    message: "Please select a manager.",
+                                    choices: managers,
+                                    name: "empmanager"
+                                }
+                            ]).then((data) => {
+                                const manager = data.empmanager;
+                                db.query(`INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                                VALUES ("${firstName}", "${lastName}", (SELECT id FROM role WHERE title = "${role}"), (SELECT m.id FROM employee AS m WHERE CONCAT(m.first_name, ' ', m.last_name) = "${manager}"));`);
+                                console.log(`Finally added a new employee!!`);
+                                init();
+                            });
+                        });
+                    });
+                });
+                break;
             case "QUIT":
                 console.log(`Hasta la pizza!`);
                 db.end();
