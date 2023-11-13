@@ -16,7 +16,7 @@ function init() {
         {
             type: "list",
             message: "What would you like to do?",
-            choices: ["View All Departments", "View All Roles", "View All Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "QUIT"],
+            choices: ["View All Departments", "View All Roles", "View All Employees", "Add a Department", "Add a Role", "Add an Employee", "Update an Employee Role", "Update an Employee's Manager", "QUIT"],
             name: "action"
         }
     ]).then((data) => {
@@ -199,6 +199,56 @@ function init() {
                                         };
                                     });
                                 });
+                            });
+                        });
+                    };
+                });
+                break;
+            case "Update an Employee's Manager":
+                db.query(`SELECT CONCAT(first_name, ' ', last_name) AS employees FROM employee`, function(err, results) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        const employees = results.map(result => result.employees);
+                        inquirer.prompt([
+                            {
+                                type: "list",
+                                message: "Select an employee you want to change.",
+                                choices: employees,
+                                name: "employee"
+                            }
+                        ]).then((data) => {
+                            const employee = data.employee;
+                            db.query(`SELECT CONCAT(e.first_name, ' ', e.last_name) AS manager FROM employee AS e
+                            WHERE e.manager_id IS NULL`, function(err, results) {
+                                if (err) {
+                                    console.error(err);
+                                } else {
+                                    const managers = results.map(result => result.manager);
+                                    managers.unshift("NONE");
+                                    inquirer.prompt([
+                                        {
+                                            type: "list",
+                                            message: "Select a manager.",
+                                            choices: managers,
+                                            name: "managerupdate"
+                                        }
+                                    ]).then((data) => {
+                                        const manager = data.managerupdate;
+                                        console.log(manager);
+                                        db.query(`UPDATE employee AS e
+                                        JOIN employee AS m ON CONCAT(e.first_name, ' ', e.last_name) = "${employee}"
+                                        SET e.manager_id = m.id
+                                        WHERE CONCAT(m.first_name, ' ', m.last_name) = "${manager}"`, function(err, results) {
+                                            if (err) {
+                                                console.error(err);
+                                            } else {
+                                                console.log(`${employee}'s manager successfully updated to ${manager}!!`);
+                                                init();
+                                            };
+                                        });
+                                    });
+                                };
                             });
                         });
                     };
