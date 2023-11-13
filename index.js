@@ -162,6 +162,48 @@ function init() {
                     });
                 });
                 break;
+            case "Update an Employee Role":
+                db.query(`SELECT CONCAT(first_name, ' ', last_name) AS employee FROM employee`, function(err, results) {
+                    if (err) {
+                        console.error(err);
+                    } else {
+                        const employees = results.map(result => result.employee);
+                        inquirer.prompt([
+                            {
+                                type: "list",
+                                message: "Select an employee you want to update.",
+                                choices: employees,
+                                name: "selectemployee"
+                            }
+                        ]).then((data) => {
+                            const selEmployee = data.selectemployee;
+                            db.query(`SELECT title FROM role`, function(err, results) {
+                                const titles = results.map(result => result.title)
+                                inquirer.prompt([
+                                    {
+                                        type: "list",
+                                        message: "Select a role you want to reassign.",
+                                        choices: titles,
+                                        name: "selectrole"
+                                    }
+                                ]).then((data) => {
+                                    const selRole = data.selectrole;
+                                    db.query(`UPDATE employee
+                                    SET role_id = (SELECT id FROM role WHERE title = "${selRole}")
+                                    WHERE CONCAT(first_name, ' ', last_name) = "${selEmployee}";`, function(err, results) {
+                                        if (err) {
+                                            console.error(err);
+                                        } else {
+                                            console.log(`Successfully updated employee's role!`);
+                                            init();
+                                        };
+                                    });
+                                });
+                            });
+                        });
+                    };
+                });
+                break;
             case "QUIT":
                 console.log(`Hasta la pizza!`);
                 db.end();
